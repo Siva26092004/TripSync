@@ -1,41 +1,41 @@
 {
   "expo": {
-    "name": "TripSync",
-    "slug": "TripSync",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+      "package": "com.yourcompany.tripsync",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBCU49q513z9fzTwJmF8j2_WbeRkSx5-NY"
+        }
       }
     },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+    "ios": {
+      "bundleIdentifier": "com.yourcompany.tripsync",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBCU49q513z9fzTwJmF8j2_WbeRkSx5-NY"
+      }
     },
     "plugins": [
-      "expo-router",
+      "expo-location",
       [
-        "expo-splash-screen",
+        "expo-build-properties",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "android": {
+            "compileSdkVersion": 31,
+            "targetSdkVersion": 31,
+            "buildToolsVersion": "31.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "13.0"
+          }
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "isAndroidLibraryEnabled": true,
+          "iosCocoaPods": true
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    ]
   }
 }
