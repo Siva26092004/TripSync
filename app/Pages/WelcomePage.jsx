@@ -2,12 +2,11 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-
 const WelcomePage = () => {
-  const navigation = useNavigation();
-
+  
+  const navigation = useNavigation(); // H
   const handleGetStarted = () => {
-    navigation.navigate("HomeScreen");
+    navigation.navigate('MainTabs');
   };
 
   return (

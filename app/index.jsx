@@ -1,12 +1,12 @@
 import { Text, View } from "react-native";
-import WelcomePage from "./Pages/WelcomePage";
-import App from './app';  
-import { registerRootComponent } from 'expo';
 
-registerRootComponent(App);
+
+import Navigation from "./Navigation";
 
 export default function Index() {
   return (
-    <WelcomePage />
+  
+    <Navigation />
+ 
   );
 }

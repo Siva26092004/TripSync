@@ -224,6 +224,7 @@ const CreateGroupPage = () => {
                     </Text>
                   </TouchableOpacity>
                   <Text style={styles.timeSeparator}>:</Text>
+
                   <TouchableOpacity 
                     style={styles.timeInput}
                     onPress={() => {
@@ -325,7 +326,7 @@ const CreateGroupPage = () => {
           )}
         </MapView>
 
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateTrip}></TouchableOpacity>
+      
         <TouchableOpacity style={styles.createButton} onPress={handleCreateTrip}>
           <Text style={styles.buttonText}>Create Trip</Text>
         </TouchableOpacity>
