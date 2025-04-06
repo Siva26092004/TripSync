@@ -7,17 +7,17 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { useRouter } from "expo-router";
+
 import PagerView from "react-native-pager-view";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { useNavigation } from "@react-navigation/native";
-import Navbar from "../components/Navbar.jsx";
 
+import { useNavigation } from "@react-navigation/native";
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
-  const router = useRouter();
+  const navigation =useNavigation();
+ 
   const [location, setLocation] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -68,14 +68,14 @@ const HomeScreen = () => {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => console.log("Create a Group Clicked")}
+        onPress={() => navigation.navigate("CreateGroupPage")}
       >
         <Text style={styles.buttonText}>Create a Group</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => console.log("Join a group clicked")}
+        onPress={() => console.log("join a group clicked")}
       >
         <Text style={styles.buttonText}>Join a Group</Text>
       </TouchableOpacity>
@@ -96,7 +96,7 @@ const HomeScreen = () => {
           </Text>
         )}
       </View>
-      <Navbar />
+     
     </View>
   );
 };

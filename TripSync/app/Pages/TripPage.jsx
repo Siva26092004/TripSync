@@ -11,7 +11,8 @@ const TripPage = () => {
   };
 
   const handleJoinGroup = () => {
-    console.log("Join Group button pressed");
+    //navigation.navigate("CreateGroupPage");
+    console.log("Join a group clicked");
   };
 
   const handleTripsPlanned = () => {
@@ -39,7 +40,7 @@ const TripPage = () => {
           <Text style={styles.buttonText}>Trips Planned</Text>
         </View>
       </TouchableOpacity>
-      <Navbar />
+     
     </View>
   );
 };

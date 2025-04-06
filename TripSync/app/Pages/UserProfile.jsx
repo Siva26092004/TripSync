@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Card, Divider } from "react-native-paper";
-import Navbar from "../components/Navbar.jsx";
+
 const UserProfile = () => {
   const [user, setUser] = useState({
     name: "John Doe",
@@ -94,7 +94,7 @@ const UserProfile = () => {
           </View>
         )}
       </Card>
-      <Navbar/>
+     
     </View>
   );
 };
