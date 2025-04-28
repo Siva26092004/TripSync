@@ -3,6 +3,7 @@ import User from '../models/userModel.js';
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    algorithm: 'RS256',
     expiresIn: '7d'
   });
 };
