@@ -24,6 +24,7 @@ const HomeScreen = () => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+  
   const [errorMsg, setErrorMsg] = useState("");
 
   const pastTrips = [
