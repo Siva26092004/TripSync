@@ -44,7 +44,7 @@ const AuthScreen = () => {
     try {
       setIsLoading(true);
       // console.log('Form Data:', formData);
-      const response = await fetch('http://192.168.249.98:5000/api/auth/register', {
+      const response = await fetch('https://trip-sync-xi.vercel.app/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ const AuthScreen = () => {
     try {
       setIsLoading(true);
 
-      const response = await fetch('http://192.168.249.98:5000/api/auth/login', {
+      const response = await fetch('https://trip-sync-xi.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
