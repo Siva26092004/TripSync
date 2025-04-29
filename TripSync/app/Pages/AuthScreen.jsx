@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import {ToastAndroid, Button, StatusBar} from 'react-native';
 
 const AuthScreen = () => {
   const navigation = useNavigation();
@@ -28,11 +29,22 @@ const AuthScreen = () => {
     }));
   };
 
+  // const showToastWithGravityAndOffset = () => {
+  //   ToastAndroid.showWithGravityAndOffset(
+  //     'A wild toast appeared!',
+  //     ToastAndroid.LONG,
+  //     ToastAndroid.BOTTOM,
+  //     25,
+  //     50,
+  //   );
+  // };
+
+
   const handleSignup = async () => {
     try {
       setIsLoading(true);
       // console.log('Form Data:', formData);
-      const response = await fetch('http://192.168.136.98:5000/api/auth/register', {
+      const response = await fetch('http://192.168.249.98:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,25 +55,31 @@ const AuthScreen = () => {
       const data = await response.json();
       // console.log(data);
       if (response.ok) {
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Account created successfully!',
-        });
+        ToastAndroid.showWithGravityAndOffset(
+          'Account Created Successfully!',
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
         setIsLogin(true);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: data.message || 'Registration failed',
-        });
+        ToastAndroid.showWithGravityAndOffset(
+          '' + (data.message || 'Signup failed'),
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Network error occurred',
-      });
+      ToastAndroid.showWithGravityAndOffset(
+        'Network error occurred',
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +89,7 @@ const AuthScreen = () => {
     try {
       setIsLoading(true);
 
-      const response = await fetch('http://192.168.136.98:5000/api/auth/login', {
+      const response = await fetch('http://192.168.249.98:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,32 +99,36 @@ const AuthScreen = () => {
           password: formData.password,
         }),
       });
-      console.log(response);
+      // console.log(response);
       const data = await response.json();
       if (response.ok) {
-        // You might want to store the token here
-        // await AsyncStorage.setItem('userToken', data.token);
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Login successful!',
-        });
+        ToastAndroid.showWithGravityAndOffset(
+          'Login Successful!',
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
         console.log("HIIII");
-        navigation.replace("HomeScreen", { userId: data.userId });
+        navigation.navigate('MainTabs');
       } else {
         console.log("Else");
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: data.message || 'Login failed',
-        });
+        ToastAndroid.showWithGravityAndOffset(
+          ""+ (data.message || 'Login failed'),
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Network error occurred',
-      });
+      ToastAndroid.showWithGravityAndOffset(
+        'Network error occurred',
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
       console.log("Catch");
     } finally {
       setIsLoading(false);
