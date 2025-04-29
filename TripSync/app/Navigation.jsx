@@ -1,15 +1,14 @@
-import * as React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-
-// Import your screens
-import HomeScreen from './Pages/HomeScreen';
-import TripPage from './Pages/TripPage';
-import TripsPlanned from './Pages/TripsPlanned';
-import UserProfile from './Pages/UserProfile';
-import WelcomePage from './Pages/WelcomePage';
-import CreateGroupPage from './Pages/CreateGroupPage';
+import * as React from "react";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import HomeScreen from "./Pages/HomeScreen";
+import TripPage from "./Pages/TripPage";
+import TripsPlanned from "./Pages/TripsPlanned";
+import UserProfile from "./Pages/UserProfile";
+import WelcomePage from "./Pages/WelcomePage";
+import CreateGroupPage from "./Pages/CreateGroupPage";
+import AuthScreen from "./Pages/AuthScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -21,19 +20,19 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          if (route.name === 'HomeScreen') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'TripPage') {
-            iconName = focused ? 'airplane' : 'airplane-outline';
-          } else if (route.name === 'UserProfile') {
-            iconName = focused ? 'person' : 'person-outline';
+          if (route.name === "HomeScreen") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "TripPage") {
+            iconName = focused ? "airplane" : "airplane-outline";
+          } else if (route.name === "UserProfile") {
+            iconName = focused ? "person" : "person-outline";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: "#007AFF",
+        tabBarInactiveTintColor: "gray",
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: "#fff",
           borderTopWidth: 0,
           elevation: 5,
           height: 60,
@@ -53,6 +52,11 @@ function MainTabs() {
 export default function AppNavigation() {
   return (
     <Stack.Navigator initialRouteName="WelcomePage">
+      <Stack.Screen
+        name="AuthScreen"
+        component={AuthScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="WelcomePage"
         component={WelcomePage}

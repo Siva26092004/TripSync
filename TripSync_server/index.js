@@ -22,7 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 
 
-app.get('/', (req, res) => {
+app.get('/', async(req, res) => {
   res.send('API is running...');
 });
 

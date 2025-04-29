@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 const WelcomePage = () => {
   
-  const navigation = useNavigation(); // H
+  const navigation = useNavigation();
   const handleGetStarted = () => {
-    navigation.navigate('MainTabs');
+    navigation.navigate('AuthScreen');
   };
 
   return (
