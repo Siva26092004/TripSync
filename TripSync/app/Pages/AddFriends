@@ -1,0 +1,135 @@
+import React, { useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+
+export default function App() {
+  const [allUsers, setAllUsers] = useState([
+    { id: '1', name: 'Prasanth', profilePic: 'https://i.pravatar.cc/150?img=4' },
+    { id: '2', name: 'Siva', profilePic: 'https://i.pravatar.cc/150?img=3' },
+    { id: '3', name: 'Hari', profilePic: 'https://i.pravatar.cc/150?img=2' },
+    { id: '4', name: 'Rahul', profilePic: 'https://i.pravatar.cc/150?img=1' },
+  ]);
+
+  const [friends, setFriends] = useState([]);
+  const [showFriends, setShowFriends] = useState(false);
+
+  const handleAddFriend = (user) => {
+    if (friends.find(f => f.id === user.id)) {
+      setFriends(friends.filter(f => f.id !== user.id)); // Unfollow
+    } else {
+      setFriends([...friends, user]); // Follow
+    }
+  };
+
+  const isFriend = (user) => {
+    return friends.find(f => f.id === user.id);
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Top-right "Show My Friends" button */}
+      <TouchableOpacity
+        style={styles.topRightButton}
+        onPress={() => setShowFriends(!showFriends)}
+      >
+        <Text style={styles.topRightButtonText}>
+          {showFriends ? 'Hide Friends' : 'Show Friends'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.heading}>All Users</Text>
+      <FlatList
+        data={allUsers}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.userCard}>
+            <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{item.name}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.followButton,
+                  isFriend(item) ? styles.following : styles.notFollowing,
+                ]}
+                onPress={() => handleAddFriend(item)}
+              >
+                <Text style={styles.followButtonText}>
+                  {isFriend(item) ? 'Following' : 'Follow'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      />
+
+      {showFriends && (
+        <>
+          <Text style={styles.heading}>Your Friends</Text>
+          {friends.length === 0 ? (
+            <Text style={styles.noFriendsText}>No friends yet. Start following!</Text>
+          ) : (
+            <FlatList
+              data={friends}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.friendCard}>
+                  <Image source={{ uri: item.profilePic }} style={styles.friendPic} />
+                  <Text style={styles.friendName}>{item.name}</Text>
+                </View>
+              )}
+            />
+          )}
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, marginTop: 40 },
+  heading: { fontSize: 24, fontWeight: 'bold', marginVertical: 15 },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    backgroundColor: '#f9f9f9',
+    padding: 10,
+    borderRadius: 10,
+  },
+  profilePic: { width: 60, height: 60, borderRadius: 30, marginRight: 15 },
+  userInfo: { flex: 1 },
+  userName: { fontSize: 18, fontWeight: 'bold' },
+  followButton: {
+    marginTop: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  notFollowing: { backgroundColor: '#4CAF50' },
+  following: { backgroundColor: '#aaa' },
+  followButtonText: { color: 'white', fontWeight: 'bold' },
+  friendCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingLeft: 5,
+  },
+  friendPic: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
+  friendName: { fontSize: 16 },
+  noFriendsText: { fontSize: 16, color: '#666', textAlign: 'center', marginTop: 10 },
+  topRightButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#008CBA',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    zIndex: 1,
+  },
+  topRightButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+});
