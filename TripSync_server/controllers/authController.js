@@ -1,43 +1,14 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
 
 dotenv.config();
 
-const privateKey =  fs.readFileSync('../TripSync_server/keys/private.key', 'utf8');
-
-const publicKey = fs.readFileSync('../TripSync_server/keys/public.key', 'utf8');
-
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, privateKey, {
-    algorithm: 'RS256',
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: '7d'
   });
 };
-
-const verifyToken = (token) => {
-  return jwt.verify(token, publicKey, {
-    algorithms: ['RS256']
-  });
-};
-
-export const verifyUser = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer')) {
-    const token = authHeader.split(' ')[1];
-    try {
-      const decoded = verifyToken(token);
-      req.user = decoded.userId; // Getting User ID
-      next();
-    } catch (err) {
-      return res.status(401).json({ msg: 'Invalid Token' });
-    }
-  } else {
-    res.status(401).json({ msg: 'No Token Provided' });
-  }
-}
 
 
 export const registerUser = async (req, res) => {
@@ -55,6 +26,7 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
