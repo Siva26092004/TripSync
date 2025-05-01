@@ -111,7 +111,7 @@ const HomeScreen = () => {
         return;
       }
 
-      const response = await fetch("http://192.168.137.1:5000/api/trips/join", {
+      const response = await fetch("https://trip-sync-xi.vercel.app/api/trips/join", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

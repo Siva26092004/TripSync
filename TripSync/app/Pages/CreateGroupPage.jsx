@@ -134,7 +134,7 @@ const CreateGroupPage = () => {
         endDate: endDate.toISOString(),
       };
 
-      const response = await fetch('http://192.168.58.32:5000/api/trips', {
+      const response = await fetch('https://trip-sync-xi.vercel.app/api/trips', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
