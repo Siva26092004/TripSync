@@ -1,4 +1,3 @@
-// Filename: app/home.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -6,33 +5,36 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
-
 import PagerView from "react-native-pager-view";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
-  const navigation =useNavigation();
- 
+  const navigation = useNavigation();
   const [location, setLocation] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
-  
   const [errorMsg, setErrorMsg] = useState("");
+  const [pastTrips, setPastTrips] = useState([]);
+  const [isLoadingTrips, setIsLoadingTrips] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [groupCode, setGroupCode] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
 
-  const pastTrips = [
-    { id: "1", name: "Beach Getaway 2024", location: "Malibu" },
-    { id: "2", name: "Mountain Adventure", location: "Colorado" },
-    { id: "3", name: "City Exploration", location: "New York" },
-  ];
   useEffect(() => {
+    // Fetch user location
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -48,7 +50,120 @@ const HomeScreen = () => {
         longitudeDelta: 0.0421,
       });
     })();
-  }, []);
+
+    // Fetch past trips
+    const fetchPastTrips = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        if (!token) {
+          setErrorMsg("Please log in to view past trips");
+          setIsLoadingTrips(false);
+          navigation.navigate("Login");
+          return;
+        }
+
+        const response = await fetch("https://trip-sync-xi.vercel.app/api/trips/mytrips", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const trips = await response.json();
+          const formattedTrips = trips.map((trip) => ({
+            id: trip._id || String(Date.now() + Math.random()),
+            name: trip.title || "Untitled Trip",
+            location: trip.destination || "Unknown Location",
+          }));
+          setPastTrips(formattedTrips);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch trips");
+        }
+      } catch (error) {
+        console.log("Error fetching trips:", error);
+        setErrorMsg(error.message || "Could not fetch past trips");
+      } finally {
+        setIsLoadingTrips(false);
+      }
+    };
+
+    fetchPastTrips();
+  }, [navigation]);
+
+  const handleJoinGroup = async () => {
+    if (!groupCode.trim()) {
+      Alert.alert("Error", "Please enter a group code");
+      return;
+    }
+    console.log("called",groupCode);
+
+    setIsJoining(true);
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      console.log(token);
+      if (!token) {
+        Alert.alert("Error", "Please log in to join a group");
+        setModalVisible(false);
+        navigation.navigate("Login");
+        return;
+      }
+
+      const response = await fetch("http://192.168.137.1:5000/api/trips/join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ groupCode }),
+      });
+      
+
+      if (response.ok) {
+        console.log(response);
+        const updatedTrip = await response.json();
+        Alert.alert("Success", "You have joined the trip successfully!");
+        setModalVisible(false);
+        setGroupCode("");
+          // Optionally refresh past trips
+          const fetchPastTrips = async () => {
+            try {
+              const tripsResponse = await fetch("https://trip-sync-xi.vercel.app/api/trips/mytrips", {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+              });
+              if (tripsResponse.ok) {
+                const trips = await tripsResponse.json();
+                const formattedTrips = trips.map((trip) => ({
+                  id: trip._id || String(Date.now() + Math.random()),
+                  name: trip.title || "Untitled Trip",
+                  location: trip.destination || "Unknown Location",
+                }));
+                setPastTrips(formattedTrips);
+              }
+            } catch (error) {
+              console.log("Error refreshing trips:", error);
+            }
+          };
+          fetchPastTrips();
+      
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Invalid group code");
+      }
+    } catch (error) {
+      console.log("Error joining group:", error);
+      Alert.alert("Error", error.message || "Could not join the group");
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to TripSync!</Text>
@@ -57,14 +172,22 @@ const HomeScreen = () => {
       {/* Carousel for Past Trips */}
       <View style={styles.carouselContainer}>
         <Text style={styles.carouselTitle}>Past Trips</Text>
-        <PagerView style={styles.pagerView} initialPage={0}>
-          {pastTrips.map((trip) => (
-            <View style={styles.page} key={trip.id}>
-              <Text style={styles.tripName}>{trip.name}</Text>
-              <Text style={styles.tripLocation}>{trip.location}</Text>
-            </View>
-          ))}
-        </PagerView>
+        {isLoadingTrips ? (
+          <ActivityIndicator size="large" color="#003366" />
+        ) : errorMsg ? (
+          <Text style={styles.errorText}>{errorMsg}</Text>
+        ) : pastTrips.length === 0 ? (
+          <Text style={styles.noTripsText}>No past trips found</Text>
+        ) : (
+          <PagerView style={styles.pagerView} initialPage={0}>
+            {pastTrips.map((trip) => (
+              <View style={styles.page} key={trip.id}>
+                <Text style={styles.tripName}>{trip.name}</Text>
+                <Text style={styles.tripLocation}>{trip.location}</Text>
+              </View>
+            ))}
+          </PagerView>
+        )}
       </View>
 
       <TouchableOpacity
@@ -76,10 +199,47 @@ const HomeScreen = () => {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => console.log("join a group clicked")}
+        onPress={() => setModalVisible(true)}
       >
         <Text style={styles.buttonText}>Join a Group</Text>
       </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Join a Group</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Group Code"
+              value={groupCode}
+              onChangeText={setGroupCode}
+              autoCapitalize="none"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.joinButton]}
+                onPress={handleJoinGroup}
+                disabled={isJoining}
+              >
+                <Text style={styles.buttonText}>
+                  {isJoining ? "Joining..." : "Join"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.mapContainer}>
         {location ? (
@@ -97,12 +257,9 @@ const HomeScreen = () => {
           </Text>
         )}
       </View>
-     
     </View>
   );
 };
-
-export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -174,44 +331,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  navbar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 70,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-    elevation: 8,
-  },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 5,
-  },
-  navText: {
-    fontSize: 12,
-    color: "#003366",
-    marginTop: 4,
-  },
   mapContainer: {
     width: "80%",
     height: 150,
     marginVertical: 10,
-    borderRadius: 12, // Softer corners
+    borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#fff",
-    elevation: 4, // Android shadow
-    shadowColor: "#000", // iOS shadow
+    elevation: 4,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     borderWidth: 1,
-    borderColor: "#e0e0e0", // Light gray border for definition
+    borderColor: "#e0e0e0",
   },
   map: {
     width: "100%",
@@ -221,4 +354,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
   },
+  errorText: {
+    fontSize: 16,
+    color: "#FF0000",
+    textAlign: "center",
+  },
+  noTripsText: {
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#003366",
+    marginBottom: 15,
+  },
+  input: {
+    width: "100%",
+    backgroundColor: "#f5f5f5",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+    fontSize: 16,
+    color: "#333",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#9FA8DA",
+  },
+  joinButton: {
+    backgroundColor: "#003366",
+  },
 });
+
+export default HomeScreen;

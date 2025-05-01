@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import {ToastAndroid, Button, StatusBar} from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const AuthScreen = () => {
   const navigation = useNavigation();
   const [isLogin, setIsLogin] = useState(true);
@@ -17,7 +17,15 @@ const AuthScreen = () => {
     password: '',
   });
 
-  
+  const storeToken = async (token) => {
+    try {
+      await AsyncStorage.setItem('userToken', token);
+      console.log('Token stored successfully');
+    } catch (error) {
+      console.log('Error storing token:', error);
+    }
+  }; 
+
   const toggleForm = () => {
     setIsLogin(!isLogin);
   };
@@ -101,6 +109,9 @@ const AuthScreen = () => {
       });
       // console.log(response);
       const data = await response.json();
+      const token = data.token; // Assuming backend returns { token: "your-jwt-token" }
+      await storeToken(token);
+      console.log(data);
       if (response.ok) {
         ToastAndroid.showWithGravityAndOffset(
           'Login Successful!',
@@ -109,7 +120,7 @@ const AuthScreen = () => {
           25,
           50,
         );
-        console.log("HIIII");
+       // console.log("HIIII");
         navigation.navigate('MainTabs');
       } else {
         console.log("Else");

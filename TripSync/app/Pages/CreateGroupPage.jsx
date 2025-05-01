@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, Platform, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert, ScrollView } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
-import tripsData from '../utils/tripsData.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CreateGroupPage = () => {
   const navigation = useNavigation();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMembers, setSelectedMembers] = useState([]);
-  const [travelMode, setTravelMode] = useState(null);
-  const [destination, setDestination] = useState(null);
+  const [title, setTitle] = useState('');
+  const [destination, setDestination] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [currentLocation, setCurrentLocation] = useState(null);
   const [region, setRegion] = useState({
     latitude: 37.78825,
@@ -18,13 +18,12 @@ const CreateGroupPage = () => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
-  const [startDate, setStartDate] = useState(new Date());
-  const [destinationName, setDestinationName] = useState('');
   const [markerLocation, setMarkerLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [markerLocationName, setMarkerLocationName] = useState('');
   const [showDateTimeModal, setShowDateTimeModal] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+  const [isStartDate, setIsStartDate] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -67,10 +66,12 @@ const CreateGroupPage = () => {
         ].filter(Boolean).join(', ');
         
         setMarkerLocationName(locationName);
+        setDestination(locationName);
       }
     } catch (error) {
       console.log('Error getting location name:', error);
       setMarkerLocationName('Location name unavailable');
+      setDestination('Location name unavailable');
     } finally {
       setIsLoadingLocation(false);
     }
@@ -81,69 +82,6 @@ const CreateGroupPage = () => {
       hour: '2-digit', 
       minute: '2-digit' 
     })}`;
-  };
-
-  const membersList = [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'Bob Johnson' },
-  ];
-
-  const handleMemberSelect = (member) => {
-    setSelectedMembers(prev => 
-      prev.includes(member.id) 
-        ? prev.filter(id => id !== member.id)
-        : [...prev, member.id]
-    );
-  };
-
-  const renderMemberItem = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => handleMemberSelect(item)}
-      style={[
-        styles.memberItem,
-        selectedMembers.includes(item.id) && styles.selectedMemberItem
-      ]}
-    >
-      <Text style={styles.memberText}>{item.name}</Text>
-    </TouchableOpacity>
-  );
-
-  const handleCreateTrip = async () => {
-    if (!markerLocation || !travelMode || selectedMembers.length === 0) {
-      Alert.alert('Missing Information', 'Please fill in all the required fields');
-      return;
-    }
-
-    try {
-      const response = await Location.reverseGeocodeAsync({
-        latitude: markerLocation.latitude,
-        longitude: markerLocation.longitude,
-      });
-      if (response[0]) {
-        const address = response[0];
-        const locationName = `${address.street || ''} ${address.city || ''}`;
-        
-        const newTrip = {
-          id: Date.now().toString(),
-          destination: markerLocation,
-          destinationName: locationName,
-          members: selectedMembers.map(id => 
-            membersList.find(m => m.id === id).name
-          ),
-          travelMode,
-          startDate,
-          date: formatDateTime(startDate)
-        };
-
-        tripsData.push(newTrip);
-        console.log('New trip:', newTrip);
-        navigation.navigate('TripsPlanned', { newTrip });
-      }
-    } catch (error) {
-      console.log('Error getting location name:', error);
-      Alert.alert('Error', 'Could not get location details. Please try again.');
-    }
   };
 
   const handleTimeChange = (hours, minutes) => {
@@ -161,8 +99,62 @@ const CreateGroupPage = () => {
   };
 
   const handleDateTimeConfirm = () => {
-    setStartDate(tempDate);
+    if (isStartDate) {
+      setStartDate(tempDate);
+    } else {
+      setEndDate(tempDate);
+    }
     setShowDateTimeModal(false);
+  };
+
+  const handleCreateTrip = async () => {
+    if (!title || !destination || !startDate || !endDate) {
+      Alert.alert('Missing Information', 'Please fill in all required fields');
+      return;
+    }
+
+    if (endDate < startDate) {
+      Alert.alert('Invalid Dates', 'End date must be after start date');
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      console.log(token);
+     /* if (!token) {
+        Alert.alert('Authentication Error', 'No token found. Please log in.');
+        navigation.navigate('Login'); // Redirect to login screen
+        return;
+      }*/
+
+      const tripData = {
+        title,
+        destination,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      };
+
+      const response = await fetch('http://192.168.58.32:5000/api/trips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(tripData),
+      });
+
+      if (response.ok) {
+        const newTrip = await response.json();
+        console.log(newTrip);
+       // navigation.navigate('TripsPlanned', { newTrip });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create trip');
+      }
+    } catch (error) {
+      console.log('Error creating trip:', error);
+      Alert.alert('Error', error.message || 'Could not create trip. Please try again.');
+    }
   };
 
   return (
@@ -170,18 +162,42 @@ const CreateGroupPage = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Create New Trip</Text>
 
+        <TextInput
+          style={styles.input}
+          placeholder="Trip Title"
+          value={title}
+          onChangeText={setTitle}
+        />
+
         <View style={styles.dateTimeContainer}>
           <Text style={styles.dateTimeText}>
-            Trip Start: {formatDateTime(startDate)}
+            Start: {formatDateTime(startDate)}
           </Text>
           <TouchableOpacity 
             style={styles.dateTimeButton}
             onPress={() => {
               setTempDate(new Date(startDate));
+              setIsStartDate(true);
               setShowDateTimeModal(true);
             }}
           >
-            <Text style={styles.buttonText}>Change Date & Time</Text>
+            <Text style={styles.buttonText}>Change Start Date</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.dateTimeContainer}>
+          <Text style={styles.dateTimeText}>
+            End: {formatDateTime(endDate)}
+          </Text>
+          <TouchableOpacity 
+            style={styles.dateTimeButton}
+            onPress={() => {
+              setTempDate(new Date(endDate));
+              setIsStartDate(false);
+              setShowDateTimeModal(true);
+            }}
+          >
+            <Text style={styles.buttonText}>Change End Date</Text>
           </TouchableOpacity>
         </View>
 
@@ -193,7 +209,7 @@ const CreateGroupPage = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Date and Time</Text>
+              <Text style={styles.modalTitle}>Select {isStartDate ? 'Start' : 'End'} Date and Time</Text>
               
               <View style={styles.datePickerContainer}>
                 <Text style={styles.datePickerLabel}>Date:</Text>
@@ -257,52 +273,6 @@ const CreateGroupPage = () => {
           </View>
         </Modal>
 
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          style={styles.addButton}
-        >
-          <Text style={styles.buttonText}>Add Members</Text>
-        </TouchableOpacity>
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Members</Text>
-              <FlatList
-                data={membersList}
-                renderItem={renderMemberItem}
-                keyExtractor={item => item.id}
-              />
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Text style={styles.buttonText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        <View style={styles.travelModeContainer}>
-          <TouchableOpacity
-            onPress={() => setTravelMode('Cycle')}
-            style={[styles.modeButton, travelMode === 'Cycle' && styles.selectedMode]}
-          >
-            <Text style={styles.buttonText}>Cycle</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setTravelMode('Motorbike')}
-            style={[styles.modeButton, travelMode === 'Motorbike' && styles.selectedMode]}
-          >
-            <Text style={styles.buttonText}>Motorbike</Text>
-          </TouchableOpacity>
-        </View>
-
         <Text style={styles.sectionTitle}>
           {isLoadingLocation ? 'Getting location name...' :
            markerLocation ? 
@@ -326,7 +296,6 @@ const CreateGroupPage = () => {
           )}
         </MapView>
 
-      
         <TouchableOpacity style={styles.createButton} onPress={handleCreateTrip}>
           <Text style={styles.buttonText}>Create Trip</Text>
         </TouchableOpacity>
@@ -342,7 +311,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingBottom: 40, 
+    paddingBottom: 40,
   },
   title: {
     fontSize: 32,
@@ -350,12 +319,13 @@ const styles = StyleSheet.create({
     color: '#1A237E',
     marginBottom: 20,
   },
-  addButton: {
-    backgroundColor: '#1A237E',
+  input: {
+    backgroundColor: '#FFFFFF',
     padding: 15,
     borderRadius: 12,
-    alignItems: 'center',
     marginBottom: 20,
+    fontSize: 16,
+    color: '#1A237E',
   },
   buttonText: {
     color: '#FFFFFF',
@@ -379,40 +349,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#1A237E',
     marginBottom: 15,
-  },
-  memberItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  selectedMemberItem: {
-    backgroundColor: '#E8EAF6',
-  },
-  memberText: {
-    fontSize: 16,
-    color: '#1A237E',
-  },
-  closeButton: {
-    backgroundColor: '#1A237E',
-    padding: 10,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  travelModeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  modeButton: {
-    backgroundColor: '#4C5B99',
-    padding: 15,
-    borderRadius: 12,
-    width: 120,
-    alignItems: 'center',
-  },
-  selectedMode: {
-    backgroundColor: '#1A237E',
   },
   sectionTitle: {
     fontSize: 20,

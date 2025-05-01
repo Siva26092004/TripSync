@@ -1,47 +1,99 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import tripsData from '../utils/tripsData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+
 const TripsPlanned = () => {
-  const trips = tripsData;
+  const navigation = useNavigation();
+  const [trips, setTrips] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) {
+          setErrorMsg('Please log in to view planned trips');
+          setIsLoading(false);
+          navigation.navigate('Login');
+          return;
+        }
+
+        const response = await fetch('https://trip-sync-xi.vercel.app/api/trips/mytrips', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const fetchedTrips = await response.json();
+          setTrips(fetchedTrips);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch trips');
+        }
+      } catch (error) {
+        console.log('Error fetching trips:', error);
+        setErrorMsg(error.message || 'Could not fetch planned trips');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTrips();
+  }, [navigation]);
 
   const renderTripItem = ({ item }) => (
-    <View style={styles.tripCard}>
+    <TouchableOpacity
+      style={styles.tripCard}
+      onPress={() => navigation.navigate('TripDetails', { trip: item })}
+    >
       <View style={styles.tripHeader}>
         <MaterialIcons name="location-on" size={24} color="#1A237E" />
         <Text style={styles.destinationText}>
-          {item.destinationName}
+          {item.destination || 'Unknown Destination'}
         </Text>
       </View>
 
       <View style={styles.tripDetails}>
         <View style={styles.detailRow}>
-          <MaterialIcons name="directions-bike" size={20} color="#1A237E" />
-          <Text style={styles.detailText}>{item.travelMode}</Text>
+          <MaterialIcons name="date-range" size={20} color="#1A237E" />
+          <Text style={styles.detailText}>
+            {new Date(item.startDate).toLocaleDateString()} - {new Date(item.endDate).toLocaleDateString()}
+          </Text>
         </View>
 
         <View style={styles.detailRow}>
           <MaterialIcons name="group" size={20} color="#1A237E" />
-          <Text style={styles.detailText}>{item.members.join(', ')}</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <MaterialIcons name="date-range" size={20} color="#1A237E" />
-          <Text style={styles.detailText}>{item.date}</Text>
+          <Text style={styles.detailText}>
+            {item.participants.map(p => p.name).join(', ') || 'No participants'}
+          </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Planned Trips</Text>
-      <FlatList
-        data={trips}
-        renderItem={renderTripItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#1A237E" />
+      ) : errorMsg ? (
+        <Text style={styles.errorText}>{errorMsg}</Text>
+      ) : trips.length === 0 ? (
+        <Text style={styles.noTripsText}>No planned trips found</Text>
+      ) : (
+        <FlatList
+          data={trips}
+          renderItem={renderTripItem}
+          keyExtractor={item => item._id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
     </View>
   );
 };
@@ -95,6 +147,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#3F51B5',
     marginLeft: 10,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF0000',
+    textAlign: 'center',
+  },
+  noTripsText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
   },
 });
 
