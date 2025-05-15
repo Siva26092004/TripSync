@@ -3,10 +3,9 @@ import mongoose from "mongoose";
 const tripSchema = new mongoose.Schema({
   title: String,
   destination: String,
-  startDate: Date,
-  endDate: Date,
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  joinRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   locationUpdates: [
     {
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

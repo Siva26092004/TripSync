@@ -21,8 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   phone_number: {
     type: String,
-    required: [true, 'Phone number is required'],
-    minlength: 10,
+    minlength: 5,
     maxlength: 15,
   },
   location: {
@@ -36,13 +35,24 @@ const userSchema = new mongoose.Schema({
       default: [0, 0],
     },
   },
+  friendList: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  profilePhoto: {
+    type: String,
+    default: '', // Empty string for users without a profile photo
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-//  Hash password before saving
+// Create an index for friendList to improve query performance
+userSchema.index({ friendList: 1 });
+
+// Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
@@ -51,7 +61,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-//  Method to compare passwords
+// Method to compare passwords
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

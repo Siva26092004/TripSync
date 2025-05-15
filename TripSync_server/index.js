@@ -4,7 +4,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js'; 
 import cors from 'cors';
 import tripRoutes from './routes/tripRoutes.js';
-
+import friendRoutes from './routes/friendRoutes.js';
 
 dotenv.config();
 
@@ -20,6 +20,7 @@ app.use(express.json()); // to parse JSON request bodies
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/friend',friendRoutes);
 
 
 app.get('/', async(req, res) => {

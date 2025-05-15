@@ -5,11 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "./Pages/HomeScreen";
 import TripPage from "./Pages/TripPage";
 import TripsPlanned from "./Pages/TripsPlanned";
-import UserProfile from "./Pages/UserProfile";
+import profilePage from "./Pages/profilePage";
 import WelcomePage from "./Pages/WelcomePage";
 import CreateGroupPage from "./Pages/CreateGroupPage";
 import AuthScreen from "./Pages/AuthScreen";
-
+import CommunityPage from "./Pages/communityPage";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -24,7 +24,7 @@ function MainTabs() {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "TripPage") {
             iconName = focused ? "airplane" : "airplane-outline";
-          } else if (route.name === "UserProfile") {
+          } else if (route.name === "CommunityPage") {
             iconName = focused ? "person" : "person-outline";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -43,7 +43,7 @@ function MainTabs() {
     >
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
       <Tab.Screen name="TripPage" component={TripPage} />
-      <Tab.Screen name="UserProfile" component={UserProfile} />
+      <Tab.Screen name="CommunityPage" component={CommunityPage} />
     </Tab.Navigator>
   );
 }
@@ -77,6 +77,11 @@ export default function AppNavigation() {
         component={CreateGroupPage}
         options={{ headerShown: false }}
       />
+      <Stack.Screen 
+        name="ProfilePage" 
+        component={profilePage}
+        options={{headerShown:false}}
+      />    
     </Stack.Navigator>
   );
 }

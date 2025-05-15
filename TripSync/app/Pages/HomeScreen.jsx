@@ -15,7 +15,7 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import ProfileIcon from '../components/ProfileIcon';
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
@@ -166,6 +166,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
+      <ProfileIcon/>
       <Text style={styles.title}>Welcome to TripSync!</Text>
       <Text style={styles.subtitle}>Plan, Sync & Travel Together.</Text>
 
